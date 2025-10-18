@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bus Management System</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap');
+         :root {
+            --primary-color: #007bff;
+            --secondary-color: #0056b3;
+            --accent-color-1: #17a2b8;
+            --text-color: #343a40;
+            --text-color-light: #ffffff;
+            --bg-color-main: #f4f7fc;
+            --bg-color-container: #ffffff;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --border-color: #dee2e6;
+        }
+        
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-color-container);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+        }
+        
+        #preloader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .scanner {
+            width: 150px;
+            height: 150px;
+            border: 3px solid var(--primary-color);
+            border-radius: 50%;
+            position: relative;
+            box-shadow: 0 0 25px var(--primary-color), inset 0 0 25px var(--primary-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .scanner .face {
+            width: 60%;
+            height: 60%;
+            background: transparent;
+            border: 2px solid var(--accent-color-1);
+            border-radius: 40%;
+            position: relative;
+        }
+        
+        .scanner .face::before,
+        .scanner .face::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--accent-color-1);
+            border-radius: 50%;
+            top: 25%;
+        }
+        
+        .scanner .face::before {
+            left: 25%;
+        }
+        
+        .scanner .face::after {
+            right: 25%;
+        }
+        
+        .scanner .face .mouth {
+            position: absolute;
+            width: 40%;
+            height: 20%;
+            border-bottom: 2px solid var(--accent-color-1);
+            border-radius: 0 0 50% 50%;
+            left: 30%;
+            bottom: 20%;
+        }
+        
+        .scanner .scan-line {
+            position: absolute;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, transparent, var(--primary-color), transparent);
+            animation: scan 3s linear infinite;
+        }
+        
+        @keyframes scan {
+            0% {
+                top: 0;
+            }
+            50% {
+                top: 97%;
+            }
+            100% {
+                top: 0;
+            }
+        }
+        
+        #preloader p {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: var(--secondary-color);
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            background-color: var(--bg-color-main);
+            color: var(--text-color);
+        }
+        
+        .container {
+            position: relative;
+            max-width: 1100px;
+            margin: 2rem auto;
+            padding: 2.5rem;
+            background-color: var(--bg-color-container);
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1,
+        h2,
+        h3 {
+            text-align: center;
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 1.5rem;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+        }
+        
+        h2 {
+            font-size: 2.2rem;
+        }
+        
+        .page {
+            display: none;
+        }
+        
+        .page.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .btn,
+        .nav-link {
+            display: inline-block;
+            padding: 12px 28px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-align: center;
+            text-decoration: none;
+        }
+        
+        .btn-primary {
+            background: var(--primary-color);
+            color: var(--text-color-light);
+            box-shadow: 0 5px 15px rgba(0, 123, 255, 0.3);
+        }
+        
+        .btn-primary:hover {
+            background: var(--secondary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 86, 179, 0.4);
+        }
+        
+        .btn-danger {
+            background-color: var(--danger-color);
+            color: var(--text-color-light);
+        }
+        
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 2rem;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+        
+        .form-control {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 12px;
+            background: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-color);
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+        }
+        
+        .role-selection,
+        .dashboard-menu {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+            margin-top: 3rem;
+        }
+        
+        .role-card,
+        .menu-card {
+            background: var(--bg-color-container);
+            padding: 2rem;
+            border-radius: 10px;
+            text-align: center;
+            width: 250px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .role-card:hover,
+        .menu-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            border-color: var(--primary-color);
+        }
+        
+        .role-card i,
+        .menu-card i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: var(--primary-color);
+        }
+        
+        .role-card h3,
+        .menu-card h3 {
+            margin-top: 0;
+            color: var(--text-color);
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .data-table thead {
+            background-color: var(--primary-color);
+            color: var(--text-color-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .data-table tbody tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .data-table tbody tr:hover {
+            background-color: #e9ecef;
+        }
+        
+        .alert {
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            color: var(--text-color-light);
+            text-align: center;
+            display: none;
+        }
+        
+        .alert.show {
+            display: block;
+        }
+        
+        .alert-success {
+            background-color: var(--success-color);
+        }
+        
+        .alert-warning {
+            background-color: var(--warning-color);
+            color: #333;
+        }
+        
+        .alert-danger {
+            background-color: var(--danger-color);
+        }
+        
+        .alert-info {
+            background-color: var(--accent-color-1);
+        }
+        
+        #home-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 1.5rem;
+            font-size: 1.5rem;
+            padding: 0.5rem 0.8rem;
+            background-color: #f8f9fa;
+            border-radius: 50%;
+            display: none;
+        }
+        
+        .video-container {
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid var(--primary-color);
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.2);
+        }
+        
+        .capture-info {
+            text-align: center;
+            margin-top: 1rem;
+        }
+        
+        .capture-info p {
+            font-size: 1.2rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="preloader">
+        <div class="scanner">
+            <div class="face">
+                <div class="mouth"></div>
+            </div>
+            <div class="scan-line"></div>
+        </div>
+        <p>Initializing System</p>
+    </div>
+
+    <div class="container">
+        <a href="#" id="home-btn" class="nav-link" data-page="home-page" title="Back to Home"><i class="fas fa-home"></i></a>
+        <div id="alert-box" class="alert"></div>
+
+        <div id="home-page" class="page active">
+            <h1>Bus Management System</h1>
+            <h2>Please Select Your Role</h2>
+            <div class="role-selection">
+                <a href="#" class="role-card nav-link" data-page="owner-dashboard"><i class="fas fa-user-shield"></i><h3>Owner</h3></a>
+                <a href="#" class="role-card nav-link" data-page="passenger-dashboard"><i class="fas fa-user-friends"></i><h3>Passenger</h3></a>
+                <a href="#" class="role-card nav-link" data-page="driver-dashboard"><i class="fas fa-steering-wheel"></i><h3>Driver</h3></a>
+            </div>
+        </div>
+
+        <div id="passenger-dashboard" class="page">
+            <h2>Passenger Dashboard</h2>
+            <div class="dashboard-menu">
+                <a href="#" class="menu-card nav-link" data-page="enroll-passenger-form"><i class="fas fa-id-card"></i><h3>Enroll & Get Seat</h3></a>
+                <a href="#" class="menu-card nav-link" data-page="mark-attendance" data-context='{"role":"passenger"}'><i class="fas fa-check-circle"></i><h3>Mark Attendance</h3></a>
+            </div>
+        </div>
+
+        <div id="driver-dashboard" class="page">
+            <h2>Driver Dashboard</h2>
+            <div class="dashboard-menu">
+                <a href="#" class="menu-card nav-link" data-page="enroll-driver-form"><i class="fas fa-id-card-alt"></i><h3>Enroll a New Driver</h3></a>
+                <a href="#" class="menu-card nav-link" data-page="mark-attendance" data-context='{"role":"driver"}'><i class="fas fa-check-circle"></i><h3>Mark Attendance</h3></a>
+            </div>
+        </div>
+
+        <div id="owner-dashboard" class="page">
+            <h2>Owner Dashboard</h2>
+            <div class="dashboard-menu">
+                <a href="#" class="menu-card nav-link" data-page="view-personnel"><i class="fas fa-users"></i><h3>View Personnel</h3></a>
+                <a href="#" class="menu-card nav-link" data-page="view-seats"><i class="fas fa-bus"></i><h3>Seat Allocations</h3></a>
+                <a href="#" class="menu-card nav-link" data-page="view-attendance"><i class="fas fa-clipboard-list"></i><h3>Attendance Log</h3></a>
+                <a href="#" class="menu-card nav-link" data-page="view-percentage"><i class="fas fa-percentage"></i><h3>Attendance %</h3></a>
+                <a href="#" class="menu-card nav-link" data-page="manual-attendance"><i class="fas fa-user-check"></i><h3>Manual Attendance</h3></a>
+            </div>
+        </div>
+
+        <div id="enroll-passenger-form" class="page">
+            <h2>Passenger Enrollment</h2>
+            <form id="passenger-form">
+                <div class="form-group"><label for="p-unique_id">Unique ID</label><input type="text" id="p-unique_id" class="form-control" required></div>
+                <div class="form-group"><label for="p-name">Full Name</label><input type="text" id="p-name" class="form-control" required></div>
+                <div class="form-group"><label for="p-phone">Phone Number</label><input type="tel" id="p-phone" class="form-control" required></div>
+                <div class="form-group"><label for="p-score">Previous Year's Score</label><input type="text" id="p-score" class="form-control" required></div>
+                <div class="form-group"><label for="p-location">Pickup Location</label><select id="p-location" class="form-control" required><option value="">-- Select --</option>{% for loc in locations %}<option value="{{ loc }}">{{ loc }}</option>{% endfor %}</select></div>
+                <button type="submit" class="btn btn-primary">Proceed to Face Capture</button>
+            </form>
+            <a href="#" class="back-link nav-link" data-page="passenger-dashboard">Back to Dashboard</a>
+        </div>
+
+        <div id="enroll-driver-form" class="page">
+            <h2>Driver Enrollment</h2>
+            <form id="driver-form">
+                <div class="form-group"><label for="d-unique_id">Driver's Unique ID</label><input type="text" id="d-unique_id" class="form-control" required></div>
+                <div class="form-group"><label for="d-name">Full Name</label><input type="text" id="d-name" class="form-control" required></div>
+                <div class="form-group"><label for="d-phone">Phone Number</label><input type="tel" id="d-phone" class="form-control" required></div>
+                <div class="form-group"><label for="d-license">License Number</label><input type="text" id="d-license" class="form-control" required></div>
+                <button type="submit" class="btn btn-primary">Proceed to Face Capture</button>
+            </form>
+            <a href="#" class="back-link nav-link" data-page="driver-dashboard">Back to Dashboard</a>
+        </div>
+
+        <div id="capture" class="page" data-sample-count="30">
+            <h2 id="capture-title">Face Enrollment</h2>
+            <div class="video-container"><img id="capture-video-feed" src="" width="640" height="480"></div>
+            <div class="capture-info">
+                <p id="capture-progress-text">Samples: 0 / 30</p>
+                <p id="capture-status-message">Getting camera ready...</p>
+                <button id="start-capture-btn" class="btn btn-primary" disabled>Start Capture</button>
+            </div>
+        </div>
+
+        <div id="mark-attendance" class="page">
+            <h2 id="attendance-title">Mark Attendance</h2>
+            <div class="video-container"><img id="attendance-video-feed" src="" width="640" height="480"></div>
+            <div class="capture-info">
+                <p id="attendance-status-message">Initializing camera...</p>
+                <button id="mark-attendance-btn" class="btn btn-primary" disabled>Mark My Attendance</button>
+            </div>
+            <a href="#" id="attendance-back-link" class="back-link nav-link">Back to Dashboard</a>
+        </div>
+
+        <div id="manual-attendance" class="page">
+            <h2>Manual Attendance - Owner</h2>
+            <form id="manual-attendance-form">
+                <div class="form-group">
+                    <label for="manual-unique-id">Enter Student/Driver Unique ID</label>
+                    <input type="text" id="manual-unique-id" class="form-control" required placeholder="Enter unique ID">
+                </div>
+                <button type="submit" class="btn btn-primary">Mark Attendance</button>
+            </form>
+            <a href="#" class="back-link nav-link" data-page="owner-dashboard">Back to Dashboard</a>
+        </div>
+
+        <div id="view-personnel" class="page"></div>
+        <div id="view-seats" class="page"></div>
+        <div id="view-attendance" class="page"></div>
+        <div id="view-percentage" class="page"></div>
+    </div>
+
+    <script>
+        function navigateTo(pageId, context = {}) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const pageEl = document.getElementById(pageId);
+            if (pageEl) pageEl.classList.add('active');
+            document.getElementById('home-btn').style.display = (pageId === 'home-page') ? 'none' : 'block';
+            window.scrollTo(0, 0);
+            if (window.pageInitializers && window.pageInitializers[pageId]) {
+                window.pageInitializers[pageId](context);
+            }
+        }
+
+        document.addEventListener('click', e => {
+            const link = e.target.closest('.nav-link');
+            if (link) {
+                e.preventDefault();
+                navigateTo(link.dataset.page, link.dataset.context ? JSON.parse(link.dataset.context) : {});
+            }
+        });
+
+        function showAlert(message, type = 'info') {
+            const box = document.getElementById('alert-box');
+            box.textContent = message;
+            box.className = `alert alert-${type} show`;
+            setTimeout(() => box.className = 'alert', 4000);
+        }
+
+        let captureContext = {};
+        let capturedSamples = [];
+        let isCapturing = false;
+
+        window.pageInitializers = {
+            'capture': (context) => {
+                captureContext = context;
+                document.getElementById('capture-title').textContent = `Face Enrollment for ${context.name}`;
+                document.getElementById('capture-progress-text').textContent = 'Samples: 0 / 30';
+                const video = document.getElementById('capture-video-feed');
+                const statusMsg = document.getElementById('capture-status-message');
+                const startBtn = document.getElementById('start-capture-btn');
+
+                statusMsg.textContent = "Initializing camera...";
+                startBtn.disabled = true;
+
+                video.onerror = () => {
+                    statusMsg.textContent = "Camera error. Please check camera permissions and try again.";
+                    startBtn.disabled = true;
+                };
+
+                video.onload = () => {
+                    statusMsg.textContent = "Camera ready. Click 'Start Capture'.";
+                    startBtn.disabled = false;
+                };
+
+                video.src = '/video_feed/capture?t=' + new Date().getTime();
+
+                setTimeout(() => {
+                    if (startBtn.disabled) {
+                        statusMsg.textContent = "Camera taking longer than expected. Please refresh the page.";
+                    }
+                }, 10000);
+            },
+            'mark-attendance': (context) => {
+                document.getElementById('attendance-title').textContent = `Live Attendance - ${context.role.charAt(0).toUpperCase() + context.role.slice(1)}`;
+                document.getElementById('attendance-back-link').dataset.page = `${context.role}-dashboard`;
+                const video = document.getElementById('attendance-video-feed');
+                const statusMsg = document.getElementById('attendance-status-message');
+                const markBtn = document.getElementById('mark-attendance-btn');
+
+                statusMsg.textContent = "Initializing camera...";
+                markBtn.disabled = true;
+
+                video.onerror = () => {
+                    statusMsg.textContent = "Camera error. Please check camera permissions and try again.";
+                    markBtn.disabled = true;
+                };
+
+                video.onload = () => {
+                    statusMsg.textContent = "Ready. Click button to mark attendance.";
+                    markBtn.disabled = false;
+                    markBtn.onclick = () => handleMarkAttendanceFace(context.role);
+                };
+
+                video.src = '/video_feed/attendance?t=' + new Date().getTime();
+
+                setTimeout(() => {
+                    if (markBtn.disabled) {
+                        statusMsg.textContent = "Camera taking longer than expected. Please refresh the page.";
+                    }
+                }, 10000);
+            },
+            'manual-attendance': () => {
+                // Manual attendance page is ready
+            },
+            'view-personnel': () => fetchAndRender('/api/personnel', renderPersonnel),
+            'view-seats': () => fetchAndRender('/api/seats', renderSeats),
+            'view-attendance': () => fetchAndRender('/api/attendance_log', renderAttendance),
+            'view-percentage': () => fetchAndRender('/api/percentage', renderPercentage),
+        };
+
+        document.getElementById('passenger-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            navigateTo('capture', {
+                role: 'passenger',
+                unique_id: document.getElementById('p-unique_id').value,
+                name: document.getElementById('p-name').value,
+                phone: document.getElementById('p-phone').value,
+                score: document.getElementById('p-score').value,
+                location: document.getElementById('p-location').value
+            });
+        });
+
+        document.getElementById('driver-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            navigateTo('capture', {
+                role: 'driver',
+                unique_id: document.getElementById('d-unique_id').value,
+                name: document.getElementById('d-name').value,
+                phone: document.getElementById('d-phone').value,
+                license: document.getElementById('d-license').value
+            });
+        });
+
+        document.getElementById('start-capture-btn').addEventListener('click', handleFaceCapture);
+
+        function handleFaceCapture() {
+            if (isCapturing) return;
+            isCapturing = true;
+            capturedSamples = [];
+            const video = document.getElementById('capture-video-feed');
+            const startBtn = document.getElementById('start-capture-btn');
+            startBtn.disabled = true;
+            document.getElementById('capture-status-message').textContent = 'Look at the camera. Hold still.';
+            const sampleCount = 30;
+
+            const captureLoop = () => {
+                if (capturedSamples.length >= sampleCount) {
+                    submitEnrollment();
+                    return;
+                }
+                setTimeout(() => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = video.naturalWidth || 640;
+                    canvas.height = video.naturalHeight || 480;
+                    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+                    capturedSamples.push(canvas.toDataURL('image/jpeg', 0.9));
+                    document.getElementById('capture-progress-text').textContent = `Samples: ${capturedSamples.length} / ${sampleCount}`;
+                    captureLoop();
+                }, 200);
+            };
+            captureLoop();
+        }
+
+        async function submitEnrollment() {
+            document.getElementById('capture-status-message').textContent = 'Submitting enrollment...';
+            const response = await fetch('/api/submit_enrollment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({...captureContext,
+                    samples: capturedSamples
+                })
+            });
+            const data = await response.json();
+            showAlert(data.message, data.success ? 'success' : 'danger');
+            if (data.success) {
+                setTimeout(() => navigateTo(`${captureContext.role}-dashboard`), 2000);
+            }
+            isCapturing = false;
+            document.getElementById('start-capture-btn').disabled = false;
+        }
+
+        async function handleMarkAttendanceFace(role) {
+            const markBtn = document.getElementById('mark-attendance-btn');
+            markBtn.disabled = true;
+            document.getElementById('attendance-status-message').textContent = 'Scanning...';
+            const video = document.getElementById('attendance-video-feed');
+            const canvas = document.createElement('canvas');
+            canvas.width = video.naturalWidth;
+            canvas.height = video.naturalHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            try {
+                const response = await fetch('/api/mark_attendance_face', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        image: canvas.toDataURL('image/jpeg'),
+                        role: role
+                    })
+                });
+                const data = await response.json();
+                showAlert(data.message, data.success ? 'success' : 'danger');
+                if (data.success) {
+                    setTimeout(() => navigateTo(`${role}-dashboard`), 2000);
+                } else {
+                    markBtn.disabled = false;
+                }
+            } catch (error) {
+                showAlert('Failed to mark attendance', 'danger');
+                markBtn.disabled = false;
+            }
+        }
+
+        document.getElementById('manual-attendance-form').addEventListener('submit', async(e) => {
+            e.preventDefault();
+            const uniqueId = document.getElementById('manual-unique-id').value;
+
+            try {
+                const response = await fetch('/api/manual_attendance', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        unique_id: uniqueId
+                    })
+                });
+                const data = await response.json();
+                showAlert(data.message, data.success ? 'success' : 'danger');
+                if (data.success) {
+                    document.getElementById('manual-attendance-form').reset();
+                }
+            } catch (error) {
+                showAlert('Failed to mark attendance', 'danger');
+            }
+        });
+
+        async function fetchAndRender(endpoint, renderer) {
+            const targetDiv = document.getElementById(renderer.name.replace('render', '').toLowerCase());
+            targetDiv.innerHTML = `<p>Loading data...</p>`;
+            try {
+                const response = await fetch(endpoint);
+                renderer(await response.json());
+            } catch (error) {
+                targetDiv.innerHTML = `<p class="alert alert-danger show">Failed to load data.</p>`;
+            }
+        }
+
+        function renderPersonnel(data) {
+            const container = document.getElementById('view-personnel');
+            let html = `<h2>Enrolled Personnel</h2><div style="overflow-x:auto;"><table class="data-table"><thead><tr><th>ID</th><th>Name</th><th>Role</th><th>Phone</th><th>Actions</th></tr></thead><tbody>`;
+            html += data.length ? data.map(p => `<tr><td><a href="#" onclick="showPersonDetails('${p.unique_id}')" style="color: var(--primary-color); text-decoration: underline; cursor: pointer;">${p.unique_id}</a></td><td>${p.name}</td><td>${p.role.charAt(0).toUpperCase() + p.role.slice(1)}</td><td>${p.phone_number || 'N/A'}</td><td><button class="btn btn-primary btn-sm" onclick="editPerson('${p.unique_id}')" style="margin-right: 5px;">Edit</button><button class="btn btn-danger btn-sm" onclick="removePerson('${p.unique_id}', '${p.name}')">Remove</button></td></tr>`).join('') : `<tr><td colspan="5" style="text-align:center;">No personnel enrolled.</td></tr>`;
+            html += `</tbody></table></div><a href="#" class="back-link nav-link" data-page="owner-dashboard">Back to Dashboard</a>`;
+            container.innerHTML = html;
+        }
+
+        async function removePerson(uniqueId, name) {
+            if (!confirm(`Are you sure you want to permanently remove ${name}?`)) return;
+            const response = await fetch('/api/remove_person', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    unique_id: uniqueId
+                })
+            });
+            const data = await response.json();
+            showAlert(data.message, data.success ? 'success' : 'danger');
+            if (data.success) navigateTo('view-personnel');
+        }
+
+        async function showPersonDetails(uniqueId) {
+            try {
+                const response = await fetch(`/api/get_person_details?unique_id=${uniqueId}`);
+                const result = await response.json();
+
+                if (!result.success) {
+                    showAlert(result.message, 'danger');
+                    return;
+                }
+
+                const data = result.data;
+                let html = `<h2>Person Details - ${data.name}</h2>`;
+                html += `<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin: 2rem 0;">`;
+
+                // Basic Info
+                html += `<div><h3>Basic Information</h3>`;
+                html += `<table class="data-table"><tbody>`;
+                html += `<tr><td><strong>Unique ID:</strong></td><td>${data.unique_id}</td></tr>`;
+                html += `<tr><td><strong>Name:</strong></td><td>${data.name}</td></tr>`;
+                html += `<tr><td><strong>Role:</strong></td><td>${data.role.charAt(0).toUpperCase() + data.role.slice(1)}</td></tr>`;
+                html += `<tr><td><strong>Phone:</strong></td><td>${data.phone_number || 'N/A'}</td></tr>`;
+                if (data.seat_info) {
+                    html += `<tr><td><strong>Seat:</strong></td><td>${data.seat_info}</td></tr>`;
+                }
+                html += `</tbody></table></div>`;
+
+                // Role-specific Info
+                html += `<div><h3>${data.role.charAt(0).toUpperCase() + data.role.slice(1)} Details</h3>`;
+                html += `<table class="data-table"><tbody>`;
+                if (data.role === 'passenger') {
+                    html += `<tr><td><strong>Location:</strong></td><td>${data.location || 'N/A'}</td></tr>`;
+                    html += `<tr><td><strong>Previous Year Score:</strong></td><td>${data.previous_year_score || 'N/A'}</td></tr>`;
+                } else if (data.role === 'driver') {
+                    html += `<tr><td><strong>License Number:</strong></td><td>${data.license_number || 'N/A'}</td></tr>`;
+                }
+                html += `</tbody></table></div>`;
+                html += `</div>`;
+
+                // Recent Attendance
+                if (data.recent_attendance && data.recent_attendance.length > 0) {
+                    html += `<h3>Recent Attendance</h3>`;
+                    html += `<table class="data-table"><thead><tr><th>Date & Time</th></tr></thead><tbody>`;
+                    data.recent_attendance.forEach(record => {
+                        html += `<tr><td>${record.timestamp}</td></tr>`;
+                    });
+                    html += `</tbody></table>`;
+                }
+
+                html += `<div style="margin-top: 2rem; text-align: center;">`;
+                html += `<button class="btn btn-primary" onclick="editPerson('${data.unique_id}')" style="margin-right: 1rem;">Edit Details</button>`;
+                html += `<button class="btn btn-danger" onclick="removePerson('${data.unique_id}', '${data.name}')">Remove Person</button>`;
+                html += `</div>`;
+                html += `<a href="#" class="back-link nav-link" data-page="view-personnel">Back to Personnel List</a>`;
+
+                document.getElementById('view-personnel').innerHTML = html;
+            } catch (error) {
+                showAlert('Failed to load person details', 'danger');
+            }
+        }
+
+        async function editPerson(uniqueId) {
+            try {
+                const response = await fetch(`/api/get_person_details?unique_id=${uniqueId}`);
+                const result = await response.json();
+
+                if (!result.success) {
+                    showAlert(result.message, 'danger');
+                    return;
+                }
+
+                const data = result.data;
+                let html = `<h2>Edit Person - ${data.name}</h2>`;
+                html += `<form id="edit-person-form">`;
+                html += `<input type="hidden" id="edit-unique-id" value="${data.unique_id}">`;
+                html += `<input type="hidden" id="edit-role" value="${data.role}">`;
+
+                html += `<div class="form-group">`;
+                html += `<label for="edit-name">Full Name</label>`;
+                html += `<input type="text" id="edit-name" class="form-control" value="${data.name}" required>`;
+                html += `</div>`;
+
+                html += `<div class="form-group">`;
+                html += `<label for="edit-phone">Phone Number</label>`;
+                html += `<input type="tel" id="edit-phone" class="form-control" value="${data.phone_number || ''}" required>`;
+                html += `</div>`;
+
+                if (data.role === 'passenger') {
+                    html += `<div class="form-group">`;
+                    html += `<label for="edit-location">Pickup Location</label>`;
+                    html += `<select id="edit-location" class="form-control" required>`;
+                    html += `<option value="">-- Select --</option>`;
+                    // Add location options dynamically from the server response
+                    const locations = data.locations || [];
+                    locations.forEach(loc => {
+                        html += `<option value="${loc}" ${data.location === loc ? 'selected' : ''}>${loc}</option>`;
+                    });
+                    html += `</select></div>`;
+
+                    html += `<div class="form-group">`;
+                    html += `<label for="edit-score">Previous Year's Score</label>`;
+                    html += `<input type="text" id="edit-score" class="form-control" value="${data.previous_year_score || ''}" required>`;
+                    html += `</div>`;
+                } else if (data.role === 'driver') {
+                    html += `<div class="form-group">`;
+                    html += `<label for="edit-license">License Number</label>`;
+                    html += `<input type="text" id="edit-license" class="form-control" value="${data.license_number || ''}" required>`;
+                    html += `</div>`;
+                }
+
+                html += `<button type="submit" class="btn btn-primary">Update Person</button>`;
+                html += `</form>`;
+                html += `<a href="#" class="back-link nav-link" data-page="view-personnel">Back to Personnel List</a>`;
+
+                document.getElementById('view-personnel').innerHTML = html;
+
+                // Add form submit handler
+                document.getElementById('edit-person-form').addEventListener('submit', async(e) => {
+                    e.preventDefault();
+                    await updatePerson();
+                });
+
+            } catch (error) {
+                showAlert('Failed to load person data for editing', 'danger');
+            }
+        }
+
+        async function updatePerson() {
+            const formData = {
+                unique_id: document.getElementById('edit-unique-id').value,
+                role: document.getElementById('edit-role').value,
+                name: document.getElementById('edit-name').value,
+                phone_number: document.getElementById('edit-phone').value
+            };
+
+            if (formData.role === 'passenger') {
+                formData.location = document.getElementById('edit-location').value;
+                formData.previous_year_score = document.getElementById('edit-score').value;
+            } else if (formData.role === 'driver') {
+                formData.license_number = document.getElementById('edit-license').value;
+            }
+
+            try {
+                const response = await fetch('/api/update_person', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+                showAlert(result.message, result.success ? 'success' : 'danger');
+
+                if (result.success) {
+                    setTimeout(() => navigateTo('view-personnel'), 1500);
+                }
+            } catch (error) {
+                showAlert('Failed to update person', 'danger');
+            }
+        }
+
+        function renderSeats(data) {
+            const container = document.getElementById('view-seats');
+            let html = `<h2>Bus Seat Allocations (${data.count} / ${data.capacity})</h2><table class="data-table"><thead><tr><th>Seat Number</th><th>Unique ID</th><th>Name</th></tr></thead><tbody>`;
+            html += data.data.length ? data.data.map(s => `<tr><td>BUS-${s.bus_code}-${s.seat_number}</td><td><a href="#" onclick="showPersonDetails('${s.unique_id}')" style="color: var(--primary-color); text-decoration: underline; cursor: pointer;">${s.unique_id}</a></td><td>${s.name}</td></tr>`).join('') : `<tr><td colspan="3" style="text-align:center;">No seats allocated.</td></tr>`;
+            html += `</tbody></table><a href="#" class="back-link nav-link" data-page="owner-dashboard">Back to Dashboard</a>`;
+            container.innerHTML = html;
+        }
+
+        function renderAttendance(data) {
+            const container = document.getElementById('view-attendance');
+            let html = `<h2>Full Attendance Log</h2><table class="data-table"><thead><tr><th>Timestamp</th><th>Unique ID</th><th>Name</th><th>Role</th></tr></thead><tbody>`;
+            html += data.length ? data.map(r => `<tr><td>${r.timestamp}</td><td><a href="#" onclick="showPersonDetails('${r.unique_id}')" style="color: var(--primary-color); text-decoration: underline; cursor: pointer;">${r.unique_id}</a></td><td>${r.name}</td><td>${r.role.charAt(0).toUpperCase() + r.role.slice(1)}</td></tr>`).join('') : `<tr><td colspan="4" style="text-align:center;">No records found.</td></tr>`;
+            html += `</tbody></table><a href="#" class="back-link nav-link" data-page="owner-dashboard">Back to Dashboard</a>`;
+            container.innerHTML = html;
+        }
+
+        function renderPercentage(data) {
+            const container = document.getElementById('view-percentage');
+            let html = `<h2>Passenger Attendance Percentage</h2><p style="text-align: center;">Report from ${data.start_date} to ${data.end_date} (${data.working_days} working days)</p><table class="data-table"><thead><tr><th>Unique ID</th><th>Name</th><th>Days Present</th><th>Percentage</th></tr></thead><tbody>`;
+            html += data.records.length ? data.records.map(r => {
+                const p = r.percentage;
+                const color = p >= 75 ? 'var(--success-color)' : p >= 50 ? 'var(--warning-color)' : 'var(--danger-color)';
+                return `<tr><td><a href="#" onclick="showPersonDetails('${r.uid}')" style="color: var(--primary-color); text-decoration: underline; cursor: pointer;">${r.uid}</a></td><td>${r.name}</td><td>${r.present}</td><td style="color: ${color}; font-weight: bold;">${p.toFixed(2)}%</td></tr>`
+            }).join('') : `<tr><td colspan="4" style="text-align:center;">No passenger data.</td></tr>`;
+            html += `</tbody></table><a href="#" class="back-link nav-link" data-page="owner-dashboard">Back to Dashboard</a>`;
+            container.innerHTML = html;
+        }
+
+        // Preloader functionality
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('preloader').classList.add('hidden');
+            }, 3000);
+        });
+    </script>
+</body>
+
+</html>
